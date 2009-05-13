@@ -1,8 +1,8 @@
 function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose )
-	% NON_LOCAL_MEANS
-	%   Returns an image denoised with the non local means algorithm
-	%   proposed by A. Buades, B. Coll and J.M. Morel in the paper "A
-	%   non-local algorithm for image denoising".
+    % NON_LOCAL_MEANS
+    %   Returns an image denoised with the non local means algorithm
+    %   proposed by A. Buades, B. Coll and J.M. Morel in the paper "A
+    %   non-local algorithm for image denoising".
     %   
     %   Use: nl_image = non_local_means( noisy_image, win, neig, h )
     %   
