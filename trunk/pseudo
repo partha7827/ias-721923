@@ -1,0 +1,83 @@
+For each pixel x {
+
+    -   We take a window centered in x and size 2t+1 x 2t+1, A(x,t). 
+        A(x,t) denotes the learning window of pixels which will be 
+        averaged. Theoretically A(x,t) should be all the image but in 
+        practice t= 7, 9 gives good results. This means a learning window 
+        of 15x15 or 18x18.
+
+    -   We take a window centered in x and size 2f+1 x 2f+1, W(x,f).
+        W(x,f) denotes the comparison window (f should be smaller than t). 
+        In a non-noisy image it can be set to f=1 (3x3). The value of f 
+        increases with the amount of noise. In general for noisy images, 
+        f=3, 4 is a good value. This means a window 7x7 or 9x9.
+
+	wmax=0;
+        The distance between x and itself is zero. This would concentrate 
+        the probaility distribution too much. For this reason x is treated 
+        in a special way.
+
+	For each pixel y in A(x,t) such that y != x {
+        All the pixels inside A(x,t) are used even when W(y,f) is not 
+        totally contained in A(x,t). We have all the image and so we can 
+        compute the window difference using the pixels outside A(x,t).
+
+        -   We compute the difference between W(x,f) and W(y,f), d(x,y). 
+            This difference is based on the square euclidean distance of 
+            the two windows and detailed below.
+
+        -	We compute the weight from the distance d(x,y), w(x,y). 
+
+        w(x,y) = exp(- d(x,y) / h);
+            The weight is given by a decreasing function of the distance. 
+            The parameter h measures the degree of filtering of the 
+            obtained image. When we know the standard deviation of the 
+            noise, sigma, the value of h should depend on it. (a good value 
+            is between 10*sigma and 15*sigma).
+
+        -   If w(x,y) is bigger than wmax then wmax = w(x,y); 
+                We compute the maximum weight obtained with a point 
+                different from x.
+
+        -   We compute the average 
+                average + = w(x,y) * u(y);
+        
+        -   We carry the sum of the weights
+                totalweight + = w( x, y);
+                x has the maximum weight obtained by a point y different 
+                from it.
+
+	} 
+
+
+    -   We give to x the maximum of the other weights
+            average += wmax * u(x);
+            totalweight + = wmax;
+
+    -   We compute the restored value
+            rest(x) = average / totalweight;
+
+} 
+
+
+
+Then each pixel at a distance d of the center is weighted by (1 / f ) 
+sum_i=d..f 1/( 2* i + 1 )^2 The center pixel is treated as a pixel 
+at distance 1. The weighting window is not Gaussian but has the following 
+form (f=5),
+
+
+function distance(x,y,f) {
+    - distancetotal = 0 ;
+    - distance = (u(x) - u(y) )^2; 
+
+    for k = 1 until f {
+        for each i=(i1,i2) such that max(|i1| ,|i2|) = k {
+            distance += ( u(x+i) - u(y+i) ) ^ 2; 
+        } 
+
+        aux = distance / (2*k + 1 )^2;
+        distancetotal += aux;
+    }
+
+	- distancetotal = distancetotal / f;
