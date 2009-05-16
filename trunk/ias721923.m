@@ -10,7 +10,7 @@ verbose = true;
 % show graphically algorithm execution
 graphic = false;
 % create example image
-image = double(imread('image/barbara.png'));
+image = double(imread('image/digest.png'));
 
 %% execution
 
