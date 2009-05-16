@@ -24,6 +24,7 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
     
     if verbose
         disp(sprintf('Start denoising with %d frames', frames));
+        disp(sprintf('\timage size: %dx%d', width, heigth));
         disp(sprintf('\tneighborhood window: %d', neig*2+1));
         disp(sprintf('\tsearch (similarity) window: %d', win*2+1));
         disp(sprintf('\tnoise standard deviation: %d', h));
