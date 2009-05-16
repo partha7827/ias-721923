@@ -77,7 +77,7 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose )
                     for k = 1:frames
                     
                         % exclude pixel (i, j) to avoid auto-comparison
-                        if r~=i+neig || c~=j+neig
+                        if k~=1 && (r~=i+neig || c~=j+neig)
                             % neighborhood of current pixel (r, c)
                             N2 = noisy_image_padded(r-neig : r+neig, c-neig : c+neig, k);
 

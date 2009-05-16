@@ -1,9 +1,9 @@
 % create example image
-image = double(imread('image/digest.png'));
+image = double(imread('image/peppers.png'));
 
 % add zero-mean white gaussian noise
-sigma = 15;
-frames = 3;
+sigma = 20;
+frames = 4;
 randn('seed', 0);
 for i = 1:frames
     noisy_images(:,:,i) = image + sigma*randn(size(image)); %#ok<AGROW>
