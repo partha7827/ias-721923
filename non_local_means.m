@@ -18,7 +18,10 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
     %   Matteo Maggioni - Spring 2009
     
     [heigth width frames] = size(noisy_images);
+    
+    % preallocating objects
     nl_image = zeros(heigth, width);
+    noisy_images_padded = zeros(heigth+neig*2, width+neig*2, frames);
     
     tic;
     
@@ -32,11 +35,11 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
     
     % padding image to let boundary pixels have a proper neighborhood
     for i = 1:frames
-        noisy_image_padded(:,:,i) = padarray(noisy_images(:,:,i), [neig neig], 'replicate'); %#ok<AGROW>
+        noisy_images_padded(:,:,i) = padarray(noisy_images(:,:,i), [neig neig], 'replicate');
     end
     
     if graphic
-        figure(1), imshow(noisy_image_padded(:,:,1), []), hold on;
+        figure(1), imshow(noisy_images_padded(:,:,1), []), hold on;
         
         neigh1 = rectangle('LineWidth',1, 'EdgeColor','red');
         %neigh2 = rectangle('LineWidth',1, 'EdgeColor','yellow');
@@ -54,7 +57,7 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
         for j = 1:width
             
             % neighborhood of pixel (i, j) bounded by similarity window
-            N1 = noisy_image_padded(i : i+2*neig, j : j+2*neig, 1);
+            N1 = noisy_images_padded(i : i+2*neig, j : j+2*neig, 1);
             
             if graphic
                 figure(1), set(neigh1, 'Position', [j i 2*neig 2*neig]);
@@ -89,7 +92,7 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
                         % exclude pixel (i, j) to avoid auto-comparison
                         if k~=1 || ~(r==i+neig && c==j+neig)
                             % neighborhood of current pixel (r, c)
-                            N2 = noisy_image_padded(r-neig : r+neig, c-neig : c+neig, k);
+                            N2 = noisy_images_padded(r-neig : r+neig, c-neig : c+neig, k);
 
                             if graphic
                                 %figure(1), set(neigh2, 'Position', [c-neig r-neig 2*neig 2*neig]);
@@ -113,7 +116,7 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
                             z = z + w;
 
                             % updating denoised pixel value
-                            nl = nl + w*noisy_image_padded(r, c, k);
+                            nl = nl + w*noisy_images_padded(r, c, k);
                         end
                         
                     end
@@ -123,7 +126,7 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
             % updating with values corresponding to pixel (i,j) itself
             % taking the maximum weight found
             z = z + mw;
-            nl = nl + mw*noisy_image_padded(i+neig, j+neig, 1);
+            nl = nl + mw*noisy_images_padded(i+neig, j+neig, 1);
             
             % storing denoised pixel value
             nl_image(i, j) = nl / z;
