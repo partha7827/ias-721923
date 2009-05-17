@@ -1,7 +1,7 @@
 %% parameters definition
 
 % frames number
-max_frames = 1;
+max_frames = 4;
 % noise definition
 sigma = 15;
 randn('state', 0);
@@ -14,16 +14,13 @@ win = 7;
 % neighborhood size
 neig = 3;
 % create example image
-image = double(imread('image/digest.png'));
+image = double(imread('image/stream.png'));
 
 %% execution
 
 for f = 1:max_frames
-    clear noisy_images;
     % creating the proper number of noisy images
-    for i = 1:f
-        noisy_images(:,:,i) = image + sigma*randn(size(image)); %#ok<AGROW>
-    end
+    noisy_images(:,:,f) = image + sigma*randn(size(image)); %#ok<AGROW>
 
     % denoise it
     nl_images(:,:,f) = non_local_means(noisy_images, win, neig, sigma, verbose, graphic); %#ok<AGROW>
@@ -33,11 +30,13 @@ for f = 1:max_frames
 
     % show results
     figure(1);
-    subplot(1,2,1), imshow(image, []), title('original');
-    subplot(1,2,2), imshow(nl_images(:,:,f), []), title('nl denoised');
+    subplot(1,3,1), imshow(image, []), title('original');
+    subplot(1,3,2), imshow(noisy_images(:,:,f), []), title('noisy');
+    subplot(1,3,3), imshow(nl_images(:,:,f), []), title('nl denoised');
 end
 
 %% plotting
+
 if max_frames>1
     figure(2);
     plot(1:max_frames, psnr);
