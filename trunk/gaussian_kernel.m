@@ -1,4 +1,4 @@
-function [kernel] = gaussian_kernel( dim )
+function [kernel] = gaussian_kernel( dim, replicate )
 	% GAUSSIAN_KERNEL
 	%
 	
@@ -14,4 +14,6 @@ function [kernel] = gaussian_kernel( dim )
 	end
 	
 	kernel = kernel ./ dim;
+    
+    kernel = repmat(kernel, [1 1 replicate]);
 end
