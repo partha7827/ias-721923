@@ -30,9 +30,10 @@ for f = 1:max_frames
 
     % show results
     figure(1);
-    subplot(1,3,1), imshow(image, []), title('original');
-    subplot(1,3,2), imshow(noisy_images(:,:,f), []), title('noisy');
-    subplot(1,3,3), imshow(nl_images(:,:,f), []), title('nl denoised');
+    subplot(2,2,1), imshow(image, []), title('original');
+    subplot(2,2,2), imshow(noisy_images(:,:,f), []), title('noisy');
+    subplot(2,2,3), imshow(nl_images(:,:,f), []), title('nl denoised');
+    subplot(2,2,4), imshow(nl_images(:,:,f)-noisy_images(:,:,f), []), title('residuals');
 end
 
 %% plotting
