@@ -9,6 +9,10 @@ randn('state', 0);
 verbose = true;
 % show graphically algorithm execution
 graphic = false;
+% search window size
+win = 7;
+% neighborhood size
+neig = 3;
 % create example image
 image = double(imread('image/digest.png'));
 
@@ -22,7 +26,7 @@ for f = 1:max_frames
     end
 
     % denoise it
-    nl_images(:,:,f) = non_local_means(noisy_images, 7, 3, sigma, verbose, graphic); %#ok<AGROW>
+    nl_images(:,:,f) = non_local_means(noisy_images, win, neig, sigma, verbose, graphic); %#ok<AGROW>
 
     %[mse, psnr] = statistics(image, noisy_image);
     psnr(f) = statistics(image, nl_images(:,:,f)); %#ok<AGROW>
@@ -35,5 +39,6 @@ end
 
 %% plotting
 if max_frames>1
+    figure(2);
     plot(1:max_frames, psnr);
 end

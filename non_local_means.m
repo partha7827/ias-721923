@@ -27,9 +27,9 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
     
     if verbose
         disp(sprintf('Start denoising with %d frames', frames));
-        disp(sprintf('\timage size: %dx%d', width, heigth));
-        disp(sprintf('\tneighborhood window: %d', neig*2+1));
-        disp(sprintf('\tsearch (similarity) window: %d', win*2+1));
+        disp(sprintf('\timage size: %dx%d pixel', width, heigth));
+        disp(sprintf('\tneighborhood window: %d pixel', neig*2+1));
+        disp(sprintf('\tsearch (similarity) window: %d pixel', win*2+1));
         disp(sprintf('\tnoise standard deviation: %d', h));
     end
     
@@ -48,7 +48,7 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
     end
     
     % computing gaussian kernel of the same size of neighborhood windows
-    kernel = gaussian_kernel(neig);
+    kernel = gaussian_kernel(neig, 1);
     
     start = toc;
     wbar = waitbar(0,'Please wait...','Name',sprintf('%d frames denoising', frames));
@@ -86,20 +86,21 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
             % neighborhoods
             for r = row_min:row_max
                 for c = col_min:col_max
+                    % neighborhood of current pixel (r, c)
+                    N2 = noisy_images_padded(r-neig : r+neig, c-neig : c+neig, :);
+                    
                     % repeat procedure for each frame
                     for k = 1:frames
                     
                         % exclude pixel (i, j) to avoid auto-comparison
                         if k~=1 || ~(r==i+neig && c==j+neig)
-                            % neighborhood of current pixel (r, c)
-                            N2 = noisy_images_padded(r-neig : r+neig, c-neig : c+neig, k);
 
                             if graphic
                                 %figure(1), set(neigh2, 'Position', [c-neig r-neig 2*neig 2*neig]);
                             end
 
                             % gaussian weigthed euclidean distance
-                            gwed = sum(sum(kernel.*((N1-N2).^2)));
+                            gwed = sum(sum(kernel.*((N1-N2(:,:,k)).^2)));
 
                             % weigth associated to N1 and N2
                             w = exp(-gwed/h^2);
@@ -141,7 +142,7 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
     close(wbar);
 
     if verbose
-        disp(sprintf('Execution time: %d seconds', floor(toc - start)));
+        disp(sprintf('\texecution time: %d seconds', floor(toc - start)));
         disp(sprintf('Finish denoising with %d frames', frames));
     end
 end
