@@ -1,4 +1,4 @@
-function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, graphic )
+function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose )
     % NON_LOCAL_MEANS
     %   Returns an image denoised with the non local means algorithm
     %   proposed by A. Buades, B. Coll and J.M. Morel in the paper "A
@@ -12,18 +12,14 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
     %   h               degree of filtering, it controls the decay of the
     %                   weights as a function of the Euclidean distances 
     %   verbose         display output while executing algorithm
-    %   graphic         display on the image the execution of the algorithm
     %
     %
     %   Matteo Maggioni - Spring 2009
     
-    [heigth width frames] = size(noisy_images);
-    
-    % preallocating objects
-    nl_image = zeros(heigth, width);
-    noisy_images_padded = zeros(heigth+neig*2, width+neig*2, frames);
-    
     tic;
+    start = toc;
+    
+    [heigth width frames] = size(noisy_images);
     
     if verbose
         disp(sprintf('Start denoising with %d frames', frames));
@@ -33,46 +29,33 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
         disp(sprintf('\tnoise standard deviation: %d', h));
     end
     
-    % padding image to let boundary pixels have a proper neighborhood
-    for i = 1:frames
-        noisy_images_padded(:,:,i) = padarray(noisy_images(:,:,i), [neig neig], 'replicate');
-    end
-    
-    if graphic
-        figure(1), imshow(noisy_images_padded(:,:,1), []), hold on;
-        
-        neigh1 = rectangle('LineWidth',1, 'EdgeColor','red');
-        %neigh2 = rectangle('LineWidth',1, 'EdgeColor','yellow');
-        best_neigh = rectangle('LineWidth',1, 'EdgeColor','blue');
-        window = rectangle('LineWidth',1, 'LineStyle','--', 'EdgeColor','white');
+    % preprocessing to speed things up
+    nl_image = zeros(heigth, width);
+    noisy_images_processed = preprocess(noisy_images, neig);
+    if verbose
+        disp(sprintf('\tpreprocessing time %d seconds', ceil(toc - start)));
     end
     
     % computing gaussian kernel of the same size of neighborhood windows
     kernel = gaussian_kernel(neig, 1);
     
-    start = toc;
     wbar = waitbar(0,'Please wait...','Name',sprintf('%d frames denoising', frames));
     
     for i = 1:heigth
         for j = 1:width
             
             % neighborhood of pixel (i, j) bounded by similarity window
-            N1 = noisy_images_padded(i : i+2*neig, j : j+2*neig, 1);
+            %N1 = noisy_images_padded(i : i+2*neig, j : j+2*neig, 1);
+            N1 = reshape(noisy_images_processed(i, j, 1, :), (2*neig+1)^2, 1);
             
-            if graphic
-                figure(1), set(neigh1, 'Position', [j i 2*neig 2*neig]);
-            end
                 
             % search window boundaries
-            row_min = max(i+neig-win, neig+1);
-            row_max = min(i+neig+win, neig+heigth);
+            row_min = max(i-win, 1);
+            row_max = min(i+win, heigth);
             
-            col_min = max(j+neig-win, neig+1);
-            col_max = min(j+neig+win, neig+width);
+            col_min = max(j-win, 1);
+            col_max = min(j+win, width);
             
-            if graphic
-                figure(1), set(window, 'Position', [col_min row_min col_max-col_min row_max-row_min]);
-            end
             
             % normalizing factor, sums of all weigths within search window
             z = 0;
@@ -87,7 +70,8 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
             for r = row_min:row_max
                 for c = col_min:col_max
                     % neighborhood of current pixel (r, c)
-                    N2 = noisy_images_padded(r-neig : r+neig, c-neig : c+neig, :);
+                    %N2 = noisy_images_padded(r-neig : r+neig, c-neig : c+neig, :);
+                    N2 = reshape(noisy_images_processed(r, c, :, :), (2*neig+1)^2, 1);
                     
                     % repeat procedure for each frame
                     for k = 1:frames
@@ -95,12 +79,8 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
                         % exclude pixel (i, j) to avoid auto-comparison
                         if k~=1 || ~(r==i+neig && c==j+neig)
 
-                            if graphic
-                                %figure(1), set(neigh2, 'Position', [c-neig r-neig 2*neig 2*neig]);
-                            end
-
                             % gaussian weigthed euclidean distance
-                            gwed = sum(sum(kernel.*((N1-N2(:,:,k)).^2)));
+                            gwed = sum(sum(kernel(:).*((N1-N2).^2)));
 
                             % weigth associated to N1 and N2
                             w = exp(-gwed/h^2);
@@ -108,16 +88,13 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
                             % updating maximum
                             if w>mw
                                 mw = w;
-                                if graphic
-                                    figure(1), set(best_neigh, 'Position', [c-neig r-neig 2*neig 2*neig]);
-                                end
                             end
 
                             % updating normalizing factor
                             z = z + w;
 
                             % updating denoised pixel value
-                            nl = nl + w*noisy_images_padded(r, c, k);
+                            nl = nl + w*N2((2*neig+1)*neig+neig+1);
                         end
                         
                     end
@@ -127,13 +104,10 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
             % updating with values corresponding to pixel (i,j) itself
             % taking the maximum weight found
             z = z + mw;
-            nl = nl + mw*noisy_images_padded(i+neig, j+neig, 1);
+            nl = nl + mw*N1((2*neig+1)*neig+neig+1);
             
             % storing denoised pixel value
             nl_image(i, j) = nl / z;
-            if graphic
-                pause;
-            end
         end
         
         msg = sprintf('Roughly %d seconds remaining...', floor((toc - start)/i*(heigth-i)));
@@ -142,7 +116,7 @@ function [ nl_image ] = non_local_means( noisy_images, win, neig, h, verbose, gr
     close(wbar);
 
     if verbose
-        disp(sprintf('\texecution time: %d seconds', floor(toc - start)));
+        disp(sprintf('\texecution time: %d seconds', ceil(toc - start)));
         disp(sprintf('Finish denoising with %d frames', frames));
     end
 end
