@@ -7,14 +7,13 @@ sigma = 15;
 randn('state', 0);
 % show verbose output
 verbose = true;
-% show graphically algorithm execution
-graphic = false;
 % search window size
 win = 7;
 % neighborhood size
 neig = 3;
 % create example image
 image = double(imread('image/stream.png'));
+
 
 %% execution
 
@@ -23,7 +22,7 @@ for f = 1:max_frames
     noisy_images(:,:,f) = image + sigma*randn(size(image)); %#ok<AGROW>
 
     % denoise it
-    nl_images(:,:,f) = non_local_means(noisy_images, win, neig, sigma, verbose, graphic); %#ok<AGROW>
+    nl_images(:,:,f) = non_local_means(noisy_images, win, neig, sigma, verbose); %#ok<AGROW>
 
     %[mse, psnr] = statistics(image, noisy_image);
     psnr(f) = statistics(image, nl_images(:,:,f)); %#ok<AGROW>
