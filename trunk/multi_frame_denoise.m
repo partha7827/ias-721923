@@ -1,9 +1,9 @@
-function [ nl_image, psnr ] = multi_frame_denoise( image, noisy_images, win, neig, h, use_mex )
+function [ nl_image, psnr, time ] = multi_frame_denoise( image, noisy_images, win, neig, h, transformation, use_mex )
     % MULTI_FRAME_DENOISE
     %   Returns an image denoised with the non local means algorithm 
     %   starting from a series of noisy frames depicting the same image.
     %   
-    %   Use: [nl_image, psnr] = multi_frame_denoise( image, noisy_images, win, neig, h, use_mex )
+    %   Use: [nl_image, psnr, time] = multi_frame_denoise( image, noisy_images, win, neig, h, use_mex )
     %   
     %   image           original image
     %   noisy_images    an array of gray-scale images
@@ -11,10 +11,14 @@ function [ nl_image, psnr ] = multi_frame_denoise( image, noisy_images, win, nei
     %   neig            half-size of the neighborhood
     %   h               degree of filtering, it controls the decay of the
     %                   weights as a function of the Euclidean distances
+    %   transformation  struct containig parameters to transform image
     %   use_mex         use mex file
     %
     %
     %   Matteo Maggioni - Spring 2009
+    
+    % add transformation to images
+    noisy_images = transform_image(noisy_images, transformation);
     
     [heigth width frames] = size(noisy_images);
     
@@ -28,6 +32,7 @@ function [ nl_image, psnr ] = multi_frame_denoise( image, noisy_images, win, nei
     disp(sprintf('\tsearch (similarity) window: %dx%d pixel', win*2+1, win*2+1));
     disp(sprintf('\tneighborhood window: %dx%d pixel', neig*2+1, neig*2+1));
     disp(sprintf('\tnoise standard deviation: %d', h));
+    disp(sprintf('\ttransformation type: %s', transformation.type));
     
     start = toc;
     
@@ -50,6 +55,8 @@ function [ nl_image, psnr ] = multi_frame_denoise( image, noisy_images, win, nei
     
     psnr = statistics(image, nl_image);
     
+    time = ceil(toc - start);
+    
     disp(sprintf('\tpsnr: %g dB', psnr));
-    disp(sprintf('\texecution time: %d seconds\n', floor(toc - start)));
+    disp(sprintf('\texecution time: %d seconds\n', time));
 end
