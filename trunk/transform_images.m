@@ -36,7 +36,8 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
     
     type = lower(transformation.type);
     
-    for i = 1:frames
+    % exclude first frame to let psnr to its thing
+    for i = 2:frames
         
         if strcmp(type, 'rotated') || strcmp(type, 'shaked')
             % picking sign of the rotation
@@ -52,7 +53,7 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
                 degree = transformation.degree;
             end
 
-            noisy_images(:,:,i) = imrotate(noisy_images(:,:,i), degree, 'crop');
+            noisy_images(:,:,i) = imrotate(noisy_images(:,:,i), degree,'bilinear', 'crop');
         end
     
         if strcmp(type, 'translated') || strcmp(type, 'shaked')
@@ -88,15 +89,15 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
                 scale = transformation.maxscale;
             end
             cropped_image = zeros(heigth, width);
-            scaled_image = imresize(uint8(noisy_images(:,:,i)), scale);
+            scaled_image = imresize(noisy_images(:,:,i), scale,'bilinear');
             [sh sw] = size(scaled_image);
             
             if sh~=heigth || sw~=width
-                % when scale factor is cole to one, the scale has no effect
+                % when scale factor is close to one, the scale has no effect
                 if scale>1
                     % scaled image is bigger than original
-                    bitw = uint8(~mod(sw - width, 2));
-                    bith = uint8(~mod(sh - heigth, 2));
+                    bitw = double(~mod(sw - width, 2));
+                    bith = double(~mod(sh - heigth, 2));
 
                     ow = ceil((sw - width)/2);
                     oh = ceil((sh - heigth)/2);
@@ -109,7 +110,7 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
 
                     cropped_image(oh:sh+oh-1, ow:sw+ow-1) = scaled_image;
                 end
-                noisy_images(:,:,i) = double(cropped_image);
+                noisy_images(:,:,i) = cropped_image;
             end
             
         end
