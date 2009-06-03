@@ -31,12 +31,10 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
     
     
     sigma = original_sigma;
-    
+    noisy_images = original_images;
     type = lower(transformation.type);
     
     [heigth width frames] = size(original_images);
-    
-    noisy_images = original_images;
     
     % exclude first frame to let psnr to its thing
     for i = 1:frames
@@ -56,17 +54,23 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
             end
             
             if mod(degree,90)~=0
-                factor = 0.25*sin(pi/90*degree)
+                % percentage of image dimensions, higher as degree
+                % approaches pi/4
+                factor = 0.25*sin(pi/90*degree);
+                % padding image using factor
                 temp_image = padarray(original_images(:,:,i), ceil([heigth width]*factor), 'symmetric');
+                % rotating padded image
                 temp_image = imrotate(temp_image, degree, 'bilinear', 'crop');
-                noisy_images(:,:,i) = temp_image(ceil(heigth*factor):heigth+ceil(heigth*factor)-1, ceil(width*factor):width+ceil(width*factor)-1);
+                % subselecting central part of padded image
+                noisy_images(:,:,i) = temp_image( ceil(heigth*factor):heigth+ceil(heigth*factor)-1, ceil(width*factor):width+ceil(width*factor)-1);
             else
+                % if degree is k*pi/2 then K.I.S.S.
                 noisy_images(:,:,i) = imrotate(noisy_images(:,:,i), degree, 'bilinear', 'crop');
             end
         end
     
         if strcmp(type, 'translated') || strcmp(type, 'shaked')
-            % picking signs of the translation
+            % picking signs of the translation along each direction
             if rand>0.5
                 signx = 1;
             else
@@ -85,8 +89,11 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
                 tx = transformation.tx;
                 ty = transformation.ty;
             end
+            % elegant way
             %T = maketform('affine', [1 0 0; 0 1 0; tx ty 1]);
             %noisy_images(:,:,i) = imtransform(noisy_images(:,:,i), T, 'XData',[1 width], 'YData',[1 heigth]);
+            
+            % brutal way - first pad then crop
             temp_image = padarray(noisy_images(:,:,i), [tx ty], 'symmetric');
             noisy_images(:,:,i) = temp_image(1:heigth, 1:width);
         end
@@ -118,6 +125,7 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
                     ow = ceil((width - sw)/2);
                     oh = ceil((heigth - sh)/2);
                     
+                    % padding image to avoid balck pixels
                     temp_image = padarray(scaled_image, [oh ow], 'symmetric');
                     noisy_images(:,:,i) = temp_image(1:heigth,1:width);
                 end
@@ -127,6 +135,8 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
         
     end
     
+    % averaging every pixel of the image with the corresponding values
+    % belonging to each frame, then standard deviation is updated
     if strcmp(transformation.type, 'oracle')
         noisy_images = mean(noisy_images, 3);
         sigma = original_sigma / sqrt(frames);
