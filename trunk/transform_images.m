@@ -29,15 +29,17 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
     %   Matteo Maggioni - Spring 2009
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    [heigth width frames] = size(original_images);
-    noisy_images = original_images;
     
     sigma = original_sigma;
     
     type = lower(transformation.type);
     
+    [heigth width frames] = size(original_images);
+    
+    noisy_images = original_images;
+    
     % exclude first frame to let psnr to its thing
-    for i = 2:frames
+    for i = 1:frames
         
         if strcmp(type, 'rotated') || strcmp(type, 'shaked')
             % picking sign of the rotation
@@ -52,8 +54,15 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
             else
                 degree = transformation.degree;
             end
-
-            noisy_images(:,:,i) = imrotate(noisy_images(:,:,i), degree,'bilinear', 'crop');
+            
+            if mod(degree,90)~=0
+                factor = 0.25*sin(pi/90*degree)
+                temp_image = padarray(original_images(:,:,i), ceil([heigth width]*factor), 'symmetric');
+                temp_image = imrotate(temp_image, degree, 'bilinear', 'crop');
+                noisy_images(:,:,i) = temp_image(ceil(heigth*factor):heigth+ceil(heigth*factor)-1, ceil(width*factor):width+ceil(width*factor)-1);
+            else
+                noisy_images(:,:,i) = imrotate(noisy_images(:,:,i), degree, 'bilinear', 'crop');
+            end
         end
     
         if strcmp(type, 'translated') || strcmp(type, 'shaked')
@@ -76,9 +85,10 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
                 tx = transformation.tx;
                 ty = transformation.ty;
             end
-            T = maketform('affine', [1 0 0; 0 1 0; tx ty 1]);
-            
-            noisy_images(:,:,i) = imtransform(noisy_images(:,:,i), T, 'XData',[1 width], 'YData',[1 heigth]);
+            %T = maketform('affine', [1 0 0; 0 1 0; tx ty 1]);
+            %noisy_images(:,:,i) = imtransform(noisy_images(:,:,i), T, 'XData',[1 width], 'YData',[1 heigth]);
+            temp_image = padarray(noisy_images(:,:,i), [tx ty], 'symmetric');
+            noisy_images(:,:,i) = temp_image(1:heigth, 1:width);
         end
         
         if strcmp(type, 'scaled') || strcmp(type, 'shaked')
@@ -88,7 +98,7 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
             else
                 scale = transformation.maxscale;
             end
-            cropped_image = zeros(heigth, width);
+            
             scaled_image = imresize(noisy_images(:,:,i), scale,'bilinear');
             [sh sw] = size(scaled_image);
             
@@ -102,15 +112,15 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
                     ow = ceil((sw - width)/2);
                     oh = ceil((sh - heigth)/2);
 
-                    cropped_image = scaled_image(oh:sh-oh-bith, ow:sw-ow-bitw);
+                    noisy_images(:,:,i) = scaled_image(oh:sh-oh-bith, ow:sw-ow-bitw);
                 else
                     % scaled image is smaller than original
                     ow = ceil((width - sw)/2);
                     oh = ceil((heigth - sh)/2);
-
-                    cropped_image(oh:sh+oh-1, ow:sw+ow-1) = scaled_image;
+                    
+                    temp_image = padarray(scaled_image, [oh ow], 'symmetric');
+                    noisy_images(:,:,i) = temp_image(1:heigth,1:width);
                 end
-                noisy_images(:,:,i) = cropped_image;
             end
             
         end

@@ -4,8 +4,8 @@
 clear
 clc
 
-% maximum number of frames in array
-max_frames = 4;
+% type of noise: 'gaussian', 'poisson', 'poiss & gauss', 'salt & pepper' or 'speckle'
+noise = 'gaussian';
 % additive white gaussian noise definition
 mu = 0;
 sigma = 0.05;
@@ -13,14 +13,17 @@ sigma = 0.05;
 a = 1/200;
 b = 10/255;
 clip = true;
+
 % boolean - set to true to use mex file
 use_mex = true;
+% maximum number of frames in array
+max_frames = 4;
 % search window halved size
 win = 7;
 % neighborhood halved size
 neig = 3;
 
-% read example image - values range from 0 to 1
+% read image - values range is [0, 1]
 image = im2double(imread('image/barbara.png'));
 [heigth width] = size(image);
 
@@ -43,9 +46,6 @@ transformation = struct( ...
     'minscale',0.9, ...
     'maxscale',1.1 ...
 );
-
-% type of noise: 'gaussian', 'poisson', 'poiss & gauss', 'salt & pepper' or 'speckle'
-noise = 'gaussian';
 
 
 
