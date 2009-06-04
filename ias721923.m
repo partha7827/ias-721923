@@ -6,7 +6,8 @@ clc
 
 % type of noise: 'gaussian', 'poisson', 'poiss & gauss', 'salt & pepper' or 'speckle'
 noise = 'gaussian';
-% additive white gaussian noise definition
+% gaussian noise definition
+randn('state',0);
 mu = 0;
 sigma = 0.05;
 % poiss-gauss noise definition
@@ -15,16 +16,16 @@ b = 10/255;
 clip = true;
 
 % boolean - set to true to use mex file
-use_mex = true;
+use_mex = false;
 % maximum number of frames in array
-max_frames = 4;
+max_frames = 1;
 % search window halved size
 win = 7;
 % neighborhood halved size
 neig = 3;
 
 % read image - values range is [0, 1]
-image = im2double(imread('image/barbara.png'));
+image = im2double(imread('image/digest.png'));
 [heigth width] = size(image);
 
 % comment out the transformations you don't want to test
@@ -32,9 +33,9 @@ type = { ...
     %'oracle', ...
     %'rotated', ...
     %'translated', ...
-    %'shaked', ...
+    'shaked', ...
     %'scaled', ...
-    'fixed' ...
+    %'fixed' ...
 };
 % define synthetic movement
 transformation = struct( ...
@@ -47,58 +48,64 @@ transformation = struct( ...
     'maxscale',1.1 ...
 );
 
+% preallocating objects
+messy_images = repmat(image, [1 1 max_frames]);
+nl_images = zeros(heigth, width, max_frames, length(type));
+psnr = zeros(max_frames, length(type));
+time = zeros(max_frames, length(type));
 
-
-%% execution
-
+% displaying general information
 disp(sprintf('image size: %dx%d pixel', width, heigth));
 disp(sprintf('search (similarity) window: %dx%d pixel', win*2+1, win*2+1));
 disp(sprintf('neighborhood window: %dx%d pixel', neig*2+1, neig*2+1));
 disp(sprintf('noise type: %s', noise));
-disp(sprintf('noise defintion: a=%g b=%g clip=%d', a, b, clip));
+if strcmp(noise, 'poiss & gauss')
+    disp(sprintf('noise defintion: a=%g b=%g clip=%d', a, b, clip));
+end
+if strcmp(noise, 'gaussian')
+    disp(sprintf('noise defintion: mu=%g sigma=%g', mu, sigma));
+end
 if use_mex
     disp(sprintf('using MEX file'));
 else
     disp(sprintf('using MAT file'));
 end
 
-psnr = zeros(max_frames, length(type));
-time = zeros(max_frames, length(type));
 
-for f = 1:max_frames
+
+%% execution
+
+for i = 1:length(type)
     
-    % creating the proper number of noisy images
-    %[noisy_images(:,:,f) noise_data] = add_noise(image, noise, a, b, clip); %#ok<AGROW>
-    [noisy_images(:,:,f) noise_data] = add_noise(image, noise, mu, sigma); %#ok<AGROW>
+    % setting the transformaion type
+    transformation.type = char(type(i));
     
-    for i = 1:length(type)
-        % set the transformaion type
-        transformation.type = char(type(i));
-        
-        disp(sprintf('\n\ttransformation type: %s', char(type(i))));
-        disp(sprintf('\tnumber of frames: %d', f));
-        
-        % add transformation to images
-        [messy_images h] = transform_images(noisy_images, b, transformation);
-        
-        % denoise it
-        [nl_images(:,:,f,i) time(f,i)] = multi_frame_denoise(messy_images, win, neig, h, use_mex); %#ok<AGROW>
-        
+    % adding transformation to images
+    [messy_images h] = transform_images(messy_images, b, transformation);
+    % adding noise
+    [noisy_images noise_data] = add_noise(messy_images, noise, mu, sigma);
+
+    disp(sprintf('\ntransformation type: %s', char(type(i))));
+    for f = 1:max_frames
+        disp(sprintf('\n\tnumber of frames: %d', f));
+
+        % denoising
+        [nl_images(:,:,f,i) time(f,i)] = multi_frame_denoise(noisy_images(:,:,1:f), win, neig, h, use_mex);
+
         % getting qulaity measure
         psnr(f,i) = statistics(image, nl_images(:,:,f,i));
-        
+
         disp(sprintf('\texecution time: %g seconds', time(f,i)));
         disp(sprintf('\tpsnr: %g dB', psnr(f,i)));
-        
-        % show results
+
+        % showing results
         fig = figure(1);
         set(fig, 'Name', sprintf('%d frames - %s sequence - %s noise', f, transformation.type, noise), 'NumberTitle','Off');
         subplot(2,2,1), imshow(image, []), title('original');
-        subplot(2,2,2), imshow(noise_data, []), title('noise');
+        subplot(2,2,2), imshow(noise_data(:,:,f), []), title('noise');
         subplot(2,2,3), imshow(nl_images(:,:,f,i), []), title('nl denoised');
         subplot(2,2,4), imshow(nl_images(:,:,f,i)-noisy_images(:,:,1), []), title('residuals');
     end
-    
 end
 
 

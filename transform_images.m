@@ -29,7 +29,6 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
     %   Matteo Maggioni - Spring 2009
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    
     sigma = original_sigma;
     noisy_images = original_images;
     type = lower(transformation.type);
@@ -37,7 +36,7 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
     [heigth width frames] = size(original_images);
     
     % exclude first frame to let psnr to its thing
-    for i = 1:frames
+    for i = 2:frames
         
         if strcmp(type, 'rotated') || strcmp(type, 'shaked')
             % picking sign of the rotation
@@ -56,7 +55,7 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
             if mod(degree,90)~=0
                 % percentage of image dimensions, higher as degree
                 % approaches pi/4
-                factor = 0.25*sin(pi/90*degree);
+                factor = 0.25*sin(pi/90*abs(degree));
                 % padding image using factor
                 temp_image = padarray(original_images(:,:,i), ceil([heigth width]*factor), 'symmetric');
                 % rotating padded image
@@ -94,7 +93,7 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
             %noisy_images(:,:,i) = imtransform(noisy_images(:,:,i), T, 'XData',[1 width], 'YData',[1 heigth]);
             
             % brutal way - first pad then crop
-            temp_image = padarray(noisy_images(:,:,i), [tx ty], 'symmetric');
+            temp_image = padarray(noisy_images(:,:,i), abs([tx ty]), 'symmetric');
             noisy_images(:,:,i) = temp_image(1:heigth, 1:width);
         end
         
