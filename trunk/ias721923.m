@@ -16,9 +16,9 @@ b = 10/255;
 clip = true;
 
 % boolean - set to true to use mex file
-use_mex = false;
+use_mex = true;
 % maximum number of frames in array
-max_frames = 1;
+max_frames = 4;
 % search window halved size
 win = 7;
 % neighborhood halved size
