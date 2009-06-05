@@ -101,7 +101,7 @@ for i = 1:length(type)
         disp(sprintf('\tpsnr: %g dB', psnr(f,i)));
 
         % showing results
-        fig = figure(f);
+        fig = figure(1);
         set(fig, 'Name', sprintf('%d frames - %s sequence - %s noise', f, transformation.type, noise), 'NumberTitle','Off');
         subplot(2,2,1), imshow(image, []), title('original');
         subplot(2,2,2), imshow(noise_data(:,:,f), []), title('noise');
@@ -115,7 +115,7 @@ end
 %% plotting
 
 if max_frames>1
-    figure(f+1);
-    subplot(2,1,1), plot(psnr,'-'), grid, title('psnr'), ylabel('dB'), legend(type, 2);
-    subplot(2,1,2), plot(time,'-'), grid, title('time'), ylabel('seconds'), legend(type, 2);
+    figure(2);
+    subplot(2,1,1), plot(psnr,'-o'), grid, title('psnr'), ylabel('dB'), legend(type, 2);
+    subplot(2,1,2), plot(time,'-o'), grid, title('time'), ylabel('seconds'), legend(type, 2);
 end
