@@ -24,7 +24,7 @@ function [ nl_image, time ] = multi_frame_denoise( noisy_images, win, neig, h, u
     kernel = gaussian_kernel(neig);
     
     % padding image to let boundary pixels have a proper neighborhood
-    noisy_images_padded = padarray(noisy_images, [neig neig], 'replicate');
+    noisy_images_padded = padarray(noisy_images, [neig neig], 'symmetric');
     
     % running algorithm
     if use_mex
