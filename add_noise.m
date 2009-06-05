@@ -1,8 +1,8 @@
-function [ noisy_images, noise_data ] = add_noise( original_images, noise_type, varargin )
+function [ noisy_images, noise_data ] = add_noise( original_images, noise_type, a, b, clip )
     % ADD_NOISE
     %   Add a certain type of noise to the specified image:
     %   
-    %    [ noisy_images ] = add_noise( original_images, noise_type, sigma, a, b, clip )
+    %    [ noisy_images ] = add_noise( original_images, noise_type, a, b, clip )
     %
     %   original_images the array of images to which add noise
     %   noise_type      a string containing the noise type, it can be one
@@ -10,24 +10,11 @@ function [ noisy_images, noise_data ] = add_noise( original_images, noise_type, 
     %                   'poiss & gauss', 'salt & pepper', 'speckle'
     %   a               semantic varies in function of the noise type
     %   b               gaussian noise standard deviation
-    %   clip            choose whether to clip pixel vlue or not (only in 
-    %                   case of 'poiss & gauss' noise)
+    %   clip            choose whether to clip pixel vlue or not
     %
     %
     %   Matteo Maggioni - Spring 2009
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    optargs = size(varargin,2);
-    
-    if optargs>=1
-        a = varargin{1};
-    end
-    if optargs>=2
-        b = varargin{2};
-    end
-    if optargs==3
-        clip = varargin{3};
-    end
     
     frames = size(original_images, 3);
     

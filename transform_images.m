@@ -1,12 +1,11 @@
-function [ noisy_images, sigma ] = transform_images( original_images, original_sigma, transformation )
+function [ noisy_images ] = transform_images( original_images, transformation )
     % TRANSFORM
     %   Generates a series of noisyimages rotated or translated starting 
     %   from the original image passed as input parameter.
     %
-    %    [ noisy_images, sigma ] = transform_images( original_images, original_sigma, transformation )
+    %    [ noisy_images ] = transform_images( original_images, transformation )
     %
     %   original_images    an array of images
-    %   original_sigma     original standard deviation of noise
     %   transformation     a struct defining transformation parameters, see
     %                      following skeleton for details
     %
@@ -29,7 +28,6 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
     %   Matteo Maggioni - Spring 2009
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    sigma = original_sigma;
     noisy_images = original_images;
     type = lower(transformation.type);
     
@@ -132,13 +130,6 @@ function [ noisy_images, sigma ] = transform_images( original_images, original_s
             
         end
         
-    end
-    
-    % averaging every pixel of the image with the corresponding values
-    % belonging to each frame, then standard deviation is updated
-    if strcmp(transformation.type, 'oracle')
-        noisy_images = mean(noisy_images, 3);
-        sigma = original_sigma / sqrt(frames);
     end
     
 end
