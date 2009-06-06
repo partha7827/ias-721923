@@ -6,11 +6,13 @@ clc
 
 % noise definition
 % type of noise: 'gaussian', 'poisson', 'poiss & gauss', 'salt & pepper' or 'speckle'
-noise = 'gaussian';
-randn('state',0);
+noise = 'poisson';
+seed = 0;
 a = 1/200;
 b = 10/255;
-clip = true;
+clip = false;
+% don't change this variable
+direct = true;
 
 % boolean - set to true to use mex file
 use_mex = true;
@@ -28,10 +30,10 @@ image = im2double(imread('image/barbara.png'));
 % comment out the transformations you don't want to test
 type = { ...
     'oracle', ...
-    %'rotated', ...
-    %'translated', ...
+    'rotated', ...
+    'translated', ...
     'shaked', ...
-    %'scaled', ...
+    'scaled', ...
     'fixed' ...
 };
 % define synthetic movement
@@ -58,7 +60,7 @@ else
 end
 
 % preallocating objects
-noisy_images = repmat(image, [1 1 max_frames]);
+images = repmat(image, [1 1 max_frames]);
 nl_images = zeros(heigth, width, max_frames, length(type));
 psnr = zeros(max_frames, length(type));
 time = zeros(max_frames, length(type));
@@ -71,28 +73,35 @@ for i = 1:length(type)
     
     % setting the transformaion type
     transformation.type = char(type(i));
+    % setting seeds for pseudo-random number generation
+    randn('state',seed);   % used in gaussian distribution
+    rand('state',seed);    % used in poissonian distribution
     
     % adding transformation to images
-    noisy_images = transform_images(noisy_images, transformation);
+    noisy_images = transform_images(images, transformation);
     % adding noise
     [noisy_images noise_data] = add_noise(noisy_images, noise, a, b, clip);
+    % direct variance transformation (stabilizing)
+    [noisy_images h] = variance_transformation(direct, noisy_images, noise, b);
 
     disp(sprintf('\ntransformation type: %s', char(type(i))));
     for f = 1:max_frames
         disp(sprintf('\n\tnumber of frames: %d', f));
         
-        if strcmp(char(type(i)), 'oracle')
+        if strcmp(char(type(i)), 'oracle') && f>1
             % averaging every pixel
             final_noisy_images = mean(noisy_images(:,:,1:f), 3);
             % updating standard deviation
             h = b / sqrt(f);
         else
             final_noisy_images = noisy_images(:,:,1:f);
-            h = b;
         end
-
+        
         % denoising
         [nl_images(:,:,f,i) time(f,i)] = multi_frame_denoise(final_noisy_images, win, neig, h, use_mex);
+        
+        % inverse variance transformation
+        nl_images(:,:,f,i) = variance_transformation(~direct, nl_images(:,:,f,i), noise);
 
         % getting qulaity measure
         psnr(f,i) = statistics(image, nl_images(:,:,f,i));
