@@ -24,17 +24,17 @@ win = 7;
 neig = 3;
 
 % read image - values range is [0, 1]
-image = im2double(imread('image/barbara.png'));
+image = im2double(imread('image/mandrill.png'));
 [heigth width] = size(image);
 
 % comment out the transformations you don't want to test
 type = { ...
     'oracle', ...
-    'rotated', ...
-    'translated', ...
+    'fixed', ...
     'shaked', ...
-    'scaled', ...
-    'fixed' ...
+    %'scaled', ...
+    %'rotated', ...
+    %'translated', ...
 };
 % define synthetic movement
 transformation = struct( ...
@@ -62,6 +62,8 @@ end
 % preallocating objects
 images = repmat(image, [1 1 max_frames]);
 nl_images = zeros(heigth, width, max_frames, length(type));
+noisy_images = zeros(heigth, width, max_frames, length(type));
+noise_data = zeros(heigth, width, max_frames, length(type));
 psnr = zeros(max_frames, length(type));
 time = zeros(max_frames, length(type));
 
@@ -73,16 +75,15 @@ for i = 1:length(type)
     
     % setting the transformaion type
     transformation.type = char(type(i));
-    % setting seeds for pseudo-random number generation
-    randn('state',seed);   % used in gaussian distribution
-    rand('state',seed);    % used in poissonian distribution
     
     % adding transformation to images
-    noisy_images = transform_images(images, transformation);
+    noisy_images(:,:,:,i) = transform_images(images, transformation);
+    
     % adding noise
-    [noisy_images noise_data] = add_noise(noisy_images, noise, a, b, clip);
-    % direct variance transformation (stabilizing)
-    [noisy_images h] = variance_transformation(direct, noisy_images, noise, b);
+    [noisy_images(:,:,:,i) noise_data(:,:,:,i)] = add_noise(noisy_images(:,:,:,i), noise, a, b, clip, seed);
+    
+    % direct variance transformation
+    [noisy_images(:,:,:,i) sigma] = variance_transformation(direct, noisy_images(:,:,:,i), noise, b);
 
     disp(sprintf('\ntransformation type: %s', char(type(i))));
     for f = 1:max_frames
@@ -90,11 +91,12 @@ for i = 1:length(type)
         
         if strcmp(char(type(i)), 'oracle') && f>1
             % averaging every pixel
-            final_noisy_images = mean(noisy_images(:,:,1:f), 3);
+            final_noisy_images = mean(noisy_images(:,:,1:f,i), 3);
             % updating standard deviation
-            h = b / sqrt(f);
+            h = sigma / sqrt(f);
         else
-            final_noisy_images = noisy_images(:,:,1:f);
+            final_noisy_images = noisy_images(:,:,1:f,i);
+            h = sigma;
         end
         
         % denoising
@@ -113,11 +115,18 @@ for i = 1:length(type)
         fig = figure(1);
         set(fig, 'Name', sprintf('%d frames - %s sequence - %s noise', f, transformation.type, noise), 'NumberTitle','Off');
         subplot(2,2,1), imshow(image, []), title('original');
-        subplot(2,2,2), imshow(noise_data(:,:,f), []), title('noise');
+        subplot(2,2,2), imshow(noise_data(:,:,f,i), []), title('noise');
         subplot(2,2,3), imshow(nl_images(:,:,f,i), []), title('nl denoised');
-        subplot(2,2,4), imshow(nl_images(:,:,f,i)-noisy_images(:,:,1), []), title('residuals');
+        subplot(2,2,4), imshow(nl_images(:,:,f,i)-noisy_images(:,:,1,i), []), title('residuals');
     end
 end
+
+% cleaning workspace
+clear noise seed a b clip direct;
+clear use_mex win neig;
+clear heigth width transformation;
+clear images final_noisy_images h sigma;
+clear f fig i;
 
 
 
