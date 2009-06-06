@@ -28,11 +28,13 @@ function [ image, sigma ] = variance_transformation( direct, original_image, noi
     
     image = original_image;
     
-    if ~strcmp(noise, 'gaussian')
+    if strcmp(noise, 'poisson')
         if direct
             % variance stabilization transformation
             image = 2 * sqrt(original_image + 3/8);
-            sigma = var(image(:));
+            % take data only from first frame
+            frame = image(:,:,1);
+            sigma = var(frame(:));
         else
             % inverse variance stabilization transformation
             image = (original_image.^2)/4 - 3/8;
