@@ -24,7 +24,7 @@ win = 7;
 neig = 3;
 
 % read image - values range is [0, 1]
-image = im2double(imread('image/mandrill.png'));
+image = im2double(imread('image/digest.png'));
 [heigth width] = size(image);
 
 % comment out the transformations you don't want to test
@@ -49,6 +49,7 @@ transformation = struct( ...
 
 % displaying general information
 disp(sprintf('image size: %dx%d pixel', width, heigth));
+disp(sprintf('frames: %d', max_frames));
 disp(sprintf('search (similarity) window: %dx%d pixel', win*2+1, win*2+1));
 disp(sprintf('neighborhood window: %dx%d pixel', neig*2+1, neig*2+1));
 disp(sprintf('noise type: %s', noise));
@@ -76,6 +77,8 @@ for i = 1:length(type)
     % setting the transformaion type
     transformation.type = char(type(i));
     
+    disp(sprintf('\ncreating %d %s images with %s noise', max_frames, transformation.type, noise));
+    
     % adding transformation to images
     noisy_images(:,:,:,i) = transform_images(images, transformation);
     
@@ -85,7 +88,7 @@ for i = 1:length(type)
     % direct variance transformation
     [noisy_images(:,:,:,i) sigma] = variance_transformation(direct, noisy_images(:,:,:,i), noise, b);
 
-    disp(sprintf('\ntransformation type: %s', char(type(i))));
+    disp(sprintf('starting denoising with %s frames', char(type(i))));
     for f = 1:max_frames
         disp(sprintf('\n\tnumber of frames: %d', f));
         
