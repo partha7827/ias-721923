@@ -87,7 +87,7 @@ for i = 1:length(type)
     
     % direct variance transformation
     [noisy_images(:,:,:,i) sigma] = variance_transformation(direct, noisy_images(:,:,:,i), noise, b);
-
+    
     disp(sprintf('starting denoising with %s frames', char(type(i))));
     for f = 1:max_frames
         disp(sprintf('\n\tnumber of frames: %d', f));
@@ -96,7 +96,7 @@ for i = 1:length(type)
             % averaging every pixel
             final_noisy_images = mean(noisy_images(:,:,1:f,i), 3);
             % updating standard deviation
-            h = sigma / sqrt(f);
+            h = sigma/sqrt(f);
         else
             final_noisy_images = noisy_images(:,:,1:f,i);
             h = sigma;
