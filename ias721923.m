@@ -31,7 +31,7 @@ image = im2double(imread('image/digest.png'));
 type = { ...
     'oracle', ...
     'fixed', ...
-    'shaked', ...
+    %'shaked', ...
     %'scaled', ...
     %'rotated', ...
     %'translated', ...
@@ -86,15 +86,19 @@ for i = 1:length(type)
     [noisy_images(:,:,:,i) noise_data(:,:,:,i)] = add_noise(noisy_images(:,:,:,i), noise, a, b, clip, seed);
     
     % direct variance transformation
+    %if ~strcmp(char(type(i)), 'oracle')
     [noisy_images(:,:,:,i) sigma] = variance_transformation(direct, noisy_images(:,:,:,i), noise, b);
+    %end
     
     disp(sprintf('starting denoising with %s frames', char(type(i))));
     for f = 1:max_frames
         disp(sprintf('\n\tnumber of frames: %d', f));
         
-        if strcmp(char(type(i)), 'oracle') && f>1
+        if strcmp(char(type(i)), 'oracle')
             % averaging every pixel
             final_noisy_images = mean(noisy_images(:,:,1:f,i), 3);
+            % direct variance transformation
+            %[final_noisy_images sigma] = variance_transformation(direct, final_noisy_images, noise, b);
             % updating standard deviation
             h = sigma/sqrt(f);
         else
