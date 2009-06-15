@@ -18,7 +18,7 @@ function [ noisy_images, noise_data ] = add_noise( original_images, noise_type, 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     randn('state',seed);
-    rand('state',seed);
+    rand('twister',seed);
     
     frames = size(original_images, 3);
     
