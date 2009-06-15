@@ -15,9 +15,9 @@ clip = false;
 direct = true;
 
 % boolean - set to true to use mex file
-use_mex = true;
+use_mex = false;
 % maximum number of frames in array
-max_frames = 4;
+max_frames = 3;
 % search window halved size
 win = 7;
 % neighborhood halved size
@@ -105,6 +105,8 @@ for i = 1:length(type)
             final_noisy_images = noisy_images(:,:,1:f,i);
             h = sigma;
         end
+        
+        h=1;
         
         % denoising
         [nl_images(:,:,f,i) time(f,i)] = multi_frame_denoise(final_noisy_images, win, neig, h, use_mex);
