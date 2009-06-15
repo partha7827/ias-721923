@@ -36,8 +36,8 @@ function [ noisy_images, noise_data ] = add_noise( original_images, noise_type, 
                 
             case 'poisson'
                 chi = 1/a;
-                noisy_image = poissrnd(max(0,chi*original_image)) / chi + min(original_image,0);
-                
+%                 noisy_image = poissrnd(max(0,chi*original_image)) / chi + min(original_image,0);
+                noisy_image = poissrnd(max(0,chi*original_image));                
             case 'poiss & gauss'
                     if a~=0
                         chi = 1/a;
