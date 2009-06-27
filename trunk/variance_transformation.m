@@ -32,17 +32,14 @@ function [ image, sigma ] = variance_transformation( direct, original_image, noi
         if direct
             % variance stabilization transformation
             image = 2 * sqrt(original_image + 3/8);
-            % take data only from first frame
-            frame = image(:,:,1);
             
             % sigma is the noise variance, not the image variance. use MAD
             % to compute noise std given an observation
-            sigma = function_stdEst2D(frame);
-%              sigma = var(frame(:));
+            sigma = function_stdEst2D(image(:,:,1));
         else
             % inverse variance stabilization transformation
             image = (original_image.^2)/4 - 3/8; % biased
-%             image = (original_image.^2)/4 - 1/8; % "debiased"
+            %image = (original_image.^2)/4 - 1/8; % "debiased"
             
         end
     end

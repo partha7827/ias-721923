@@ -7,7 +7,7 @@ function [ noisy_images, noise_data ] = add_noise( original_images, noise_type, 
     %   original_images the array of images to which add noise
     %   noise_type      a string containing the noise type, it can be one
     %                   of the following values: 'gaussian', 'poisson', 
-    %                   'poiss & gauss', 'salt & pepper', 'speckle'
+    %                   or 'poiss & gauss'
     %   a               semantic varies in function of the noise type
     %   b               gaussian noise standard deviation
     %   clip            choose whether to clip pixel vlue or not
@@ -32,12 +32,12 @@ function [ noisy_images, noise_data ] = add_noise( original_images, noise_type, 
     
         switch noise_type
             case 'gaussian'
-                noisy_image = original_image + a + b*randn(size(original_image));
+                noisy_image = original_image + b*randn(size(original_image));
                 
             case 'poisson'
                 chi = 1/a;
-%                 noisy_image = poissrnd(max(0,chi*original_image)) / chi + min(original_image,0);
-                noisy_image = poissrnd(max(0,chi*original_image));                
+                noisy_image = poissrnd(max(0,chi*original_image));
+                original_image = original_image*255;
             case 'poiss & gauss'
                     if a~=0
                         chi = 1/a;
@@ -46,12 +46,6 @@ function [ noisy_images, noise_data ] = add_noise( original_images, noise_type, 
 
                     noisy_image = noisy_image + b*randn(size(noisy_image));
                     
-            case 'salt & pepper'
-                noisy_image = imnoise(original_image, 'salt & pepper', a);
-                
-            case 'speckle'
-                noisy_image = imnoise(original_image, 'speckle', a);
-                
             otherwise
                 noisy_image = original_image + a + b*randn(size(original_image));
         end
