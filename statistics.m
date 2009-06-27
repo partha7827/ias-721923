@@ -15,6 +15,9 @@ function [ psnr, mse ] = statistics( original_image, denoised_image )
     %   Matteo Maggioni - Spring 2009
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
+    original_image = scale_images(original_image);
+    denoised_image = scale_images(denoised_image);
+    
     % mean squared error (MSE) of the reconstructed image
     mse = mean2((original_image-denoised_image).^2);
     
