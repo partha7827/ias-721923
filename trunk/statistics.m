@@ -1,4 +1,4 @@
-function [ psnr, mse ] = statistics( original_image, denoised_image )
+function [ psnr, mse ] = statistics( original_image, denoised_image, scale )
     % STATISTICS
     %   Compute the mean square error (MSE) and the
     %   peak-signal-to-noise-ratio (PSNR) defined respectively as:
@@ -10,13 +10,16 @@ function [ psnr, mse ] = statistics( original_image, denoised_image )
     %
     %   original_image  the image used as comparison
     %   denoised_image  the image produced by denoising routine
+    %   scale           boolean value, choose to scale images or not
     %
     %
     %   Matteo Maggioni - Spring 2009
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    original_image = scale_images(original_image);
-    denoised_image = scale_images(denoised_image);
+    if scale
+        original_image = scale_images(original_image);
+        denoised_image = scale_images(denoised_image);
+    end
     
     % mean squared error (MSE) of the reconstructed image
     mse = mean2((original_image-denoised_image).^2);
